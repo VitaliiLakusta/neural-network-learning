@@ -57,6 +57,10 @@ for i=1:m
 end
 J = (1.0 / m) * J;
 
+% Add regularization term to cost function
+theta1SumSquared = sum(sum(Theta1(:, 2:end) .^ 2));
+theta2SumSquared = sum(sum(Theta2(:, 2:end) .^ 2));
+J += (lambda / (2 * m)) * (theta1SumSquared + theta2SumSquared);
 
 
 % Part 2: Implement the backpropagation algorithm to compute the gradients

@@ -39,18 +39,22 @@ m = size(X, 1);
 X = [ones(m, 1) X];
 
 % Feedforward propagation
-layerTwoLinear = Theta1 * X';
-layerTwoActivators = sigmoid(layerTwoLinear);
-layerTwoActivators = [ones(1, size(layerTwoActivators, 2)); layerTwoActivators];
+% Theta1 % h x n
+% Theta2 % r x h
 
-outputLayerLinear = Theta2 * layerTwoActivators;
-outputLayerActivators = sigmoid(outputLayerLinear);
+z2 = X * Theta1'; % m x h
+a2 = sigmoid(z2); % m x h
+a2WithBias = [ones(size(a2, 1), 1) a2]; % m x (h + 1)
+
+z3 = a2WithBias * Theta2'; % m x r
+a3 = sigmoid(z3); % m x r
 
 % Computing cost function
 for i=1:m
     yVector = zeros(num_labels, 1);
     yVector(y(i)) = 1;
-    hypothesisVector = outputLayerActivators(:, i);
+    hypothesisVector = a3(i, :);
+    hypothesisVector = hypothesisVector';
     J += sum( ...
         -yVector .* log(hypothesisVector) - (1 - yVector) .* log(1 - hypothesisVector) ...
     );
@@ -62,22 +66,22 @@ theta1SumSquared = sum(sum(Theta1(:, 2:end) .^ 2));
 theta2SumSquared = sum(sum(Theta2(:, 2:end) .^ 2));
 J += (lambda / (2 * m)) * (theta1SumSquared + theta2SumSquared);
 
+% Backpropagation
+yMatrix = zeros(m, num_labels); % m x r
+for i=1:m
+    yMatrix(i, y(i)) = 1;
+end
 
-% Part 2: Implement the backpropagation algorithm to compute the gradients
-%         Theta1_grad and Theta2_grad. You should return the partial derivatives of
-%         the cost function with respect to Theta1 and Theta2 in Theta1_grad and
-%         Theta2_grad, respectively. After implementing Part 2, you can check
-%         that your implementation is correct by running checkNNGradients
-%
-%         Note: The vector y passed into the function is a vector of labels
-%               containing values from 1..K. You need to map this vector into a
-%               binary vector of 1's and 0's to be used with the neural network
-%               cost function.
-%
-%         Hint: We recommend implementing backpropagation using a for-loop
-%               over the training examples if you are implementing it for the
-%               first time.
-%
+delta3 = a3 .- yMatrix; % m x r
+delta2 = delta3 * Theta2(:, 2:end) .* sigmoidGradient(z2);   % [m x r] x [r x h] --> [m x h]
+
+D1 = delta2' * X;  % [h x m] x [m x n] --> [h x n]
+D2 = delta3' * a2WithBias; % [r x m] x [m x (h+1)] --> [r x (h+1)]
+
+Theta1_grad = (1.0 / m) .* D1;
+Theta2_grad = (1.0 / m) .* D2;
+
+
 % Part 3: Implement regularization with the cost function and gradients.
 %
 %         Hint: You can implement this around the code for
@@ -85,8 +89,6 @@ J += (lambda / (2 * m)) * (theta1SumSquared + theta2SumSquared);
 %               the regularization separately and then add them to Theta1_grad
 %               and Theta2_grad from Part 2.
 %
-
-
 
 
 

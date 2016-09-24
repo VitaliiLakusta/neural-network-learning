@@ -78,24 +78,17 @@ delta2 = delta3 * Theta2(:, 2:end) .* sigmoidGradient(z2);   % [m x r] x [r x h]
 D1 = delta2' * X;  % [h x m] x [m x n] --> [h x n]
 D2 = delta3' * a2WithBias; % [r x m] x [m x (h+1)] --> [r x (h+1)]
 
-Theta1_grad = (1.0 / m) .* D1;
-Theta2_grad = (1.0 / m) .* D2;
+Theta1_grad = (1.0 / m) .* D1; % [h x n]
+Theta2_grad = (1.0 / m) .* D2; % [r x (h+1)]
 
+% Add regularization to the gradient
+Theta1WithZeroBias = zeros(size(Theta1));
+Theta1WithZeroBias += [zeros(size(Theta1, 1), 1) Theta1(:, 2:end)];
+Theta1_grad += (lambda / m) * Theta1WithZeroBias;
 
-% Part 3: Implement regularization with the cost function and gradients.
-%
-%         Hint: You can implement this around the code for
-%               backpropagation. That is, you can compute the gradients for
-%               the regularization separately and then add them to Theta1_grad
-%               and Theta2_grad from Part 2.
-%
-
-
-
-
-% -------------------------------------------------------------
-
-% =========================================================================
+Theta2WithZeroBias = zeros(size(Theta2));
+Theta2WithZeroBias += [zeros(size(Theta2, 1), 1) Theta2(:, 2:end)];
+Theta2_grad += (lambda / m) * Theta2WithZeroBias;
 
 % Unroll gradients
 grad = [Theta1_grad(:) ; Theta2_grad(:)];
